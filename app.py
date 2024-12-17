@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 # Deze code combineert document retrieval via een FAISS-vectorstore
 #  en antwoordgeneratie via Flan-T5.
@@ -187,4 +188,31 @@ print(f"EINDE DEBUG antwoord:\n{antwoord}")
 if __name__ == "__main__":
     from waitress import serve
     print("Running production server with Waitress...")
+=======
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+
+app = Flask(__name__)
+CORS(app)  # Sta verzoeken van andere domeinen toe
+
+@app.route("/kba", methods=["POST"])  
+def answer_question():
+    # Controleer of er JSON is verzonden
+    if not request.is_json:
+        return jsonify({"error": "Verwacht JSON-data"}), 400
+
+    # Haal de vraag uit het verzoek
+    data = request.get_json()
+    vraag = data.get("vraag", "")
+    if not vraag:
+        return jsonify({"error": "Geen vraag ontvangen."}), 400
+
+    # Verwerk de vraag en genereer een antwoord
+    antwoord = f"Hier is je antwoord op: '{vraag}'"
+    return jsonify({"vraag": vraag, "antwoord": antwoord})
+
+if __name__ == "__main__":
+    from waitress import serve
+    print("Running in production with Waitress...")
+>>>>>>> dd1eb08fc6eec5e167dd4241a0912d7eeb14a735
     serve(app, host="0.0.0.0", port=5000)
