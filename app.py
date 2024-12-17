@@ -4,7 +4,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)  # Sta verzoeken van andere domeinen toe
 
-@app.route("/kba", methods=["POST"])  # Zorg ervoor dat alleen POST wordt toegestaan
+@app.route("/kba", methods=["POST"])  
 def answer_question():
     # Controleer of er JSON is verzonden
     if not request.is_json:
