@@ -1,6 +1,9 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 
+# Flask-app configuratie
 app = Flask(__name__)
+CORS(app)  # Sta CORS toe voor API-aanroepen
 
 # Root route to test if the service is running
 @app.route('/', methods=['GET'])
