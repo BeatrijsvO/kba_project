@@ -9,7 +9,6 @@ from langchain.docstore.document import Document
 from transformers import pipeline
 import os
 
-@app.route("/kba", methods=["POST"])
 app = Flask(__name__)
 CORS(app)  # Sta verzoeken van andere domeinen toe
 
@@ -63,6 +62,7 @@ def generate_answer(vraag, context):
     result = nlp_pipeline(prompt, max_length=200, truncation=True, num_return_sequences=1)
     return result[0]['generated_text']
 
+@app.route("/kba", methods=["POST"])
 def answer_question():
     if not request.is_json:
         return jsonify({"error": "Verwacht JSON-data"}), 400
