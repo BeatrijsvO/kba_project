@@ -6,7 +6,6 @@ from langchain.vectorstores import FAISS
 from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
 from transformers import pipeline
-import os
 
 # Flask-app configuratie
 app = Flask(__name__)
@@ -75,7 +74,7 @@ def answer_question():
 # Start de server met Waitress
 if __name__ == "__main__":
     from waitress import serve
+    import os
     print("Running production server with Waitress...")
-    #serve(app, host="0.0.0.0", port=5000)
     port = int(os.environ.get("PORT", 5000))  
     serve(app, host="0.0.0.0", port=port)
