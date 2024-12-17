@@ -1,4 +1,5 @@
 # ALLEEN IN productie omgeving
+# uitvoeren in cmd: pip install -U langchain sentence-transformers faiss-cpu langchain-community flask flask-cors
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from sentence_transformers import SentenceTransformer
@@ -75,12 +76,8 @@ def answer_question():
     antwoord = generate_answer(vraag, context)
     return jsonify({"vraag": vraag, "antwoord": antwoord})
 
- # ???? Endpoint om vragen te beantwoorden
-@app.route("/kba", methods=["POST"])
-
 # einde
 if __name__ == "__main__":
     from waitress import serve
     print("Running production server with Waitress...")
     serve(app, host="0.0.0.0", port=5000)
-   
