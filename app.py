@@ -48,13 +48,13 @@ def initialize_services():
     # Initialiseer NLP-pipeline (BLOOMZ)
     nlp_pipeline = pipeline("text-generation", model="bigscience/bloomz-1b7")
 
-    print("Services succesvol geïnitialiseerd!")
+    print("Services succesvol geÃ¯nitialiseerd!")
 
 # Functie voor ophalen van relevante documenten
 def retrieve_documents(vraag, k=3):
     """Haal relevante documenten op uit de vectorstore."""
     if vectorstore is None:
-        raise ValueError("Vectorstore is niet geïnitialiseerd.")
+        raise ValueError("Vectorstore is niet geÃ¯nitialiseerd.")
     results = vectorstore.similarity_search(vraag, k=k)
     return [doc.page_content for doc in results]
 
