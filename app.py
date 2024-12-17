@@ -1,9 +1,9 @@
 # Deze code combineert document retrieval via een FAISS-vectorstore en antwoordgeneratie via BLOOMZ.
 
 # Stap 1: Importeer vereiste bibliotheken
-!pip install -U langchain sentence-transformers faiss-cpu langchain-community
-!pip install flask-cors
-!pip install waitress
+#!pip install -U langchain sentence-transformers faiss-cpu langchain-community
+#!pip install flask-cors
+#!pip install waitress
 
 
 from sentence_transformers import SentenceTransformer
