@@ -3,6 +3,7 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)  # Sta verzoeken van andere domeinen toe
+CORS(app, resources={r"/*": {"origins": "https://kba-project.onrender.com"}})
 
 @app.route("/kba", methods=["POST"])
 def answer_question():
