@@ -18,7 +18,9 @@ def answer_question():
     antwoord = f"Hier is je antwoord op: '{vraag}'"
     return jsonify({"vraag": vraag, "antwoord": antwoord})
 
+
 if __name__ == "__main__":
-    from waitress import serve
-    print("Running production server with Waitress...")
-    serve(app, host="0.0.0.0", port=5000)
+    # Dynamische poort ophalen via $PORT
+    port = int(os.environ.get("PORT", 5000))  # Default naar 5000 voor lokaal testen
+    print(f"Server draait op poort {port}...")
+    serve(app, host="0.0.0.0", port=port)
