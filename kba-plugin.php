@@ -3,7 +3,7 @@
 Plugin Name: KBA Plugin
 Description: Verbind met KBA API.
 Version: 1.0
-Author: Jouw Naam
+Author: YininIT
 */
 
 function kba_enqueue_scripts() {
