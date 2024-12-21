@@ -18,8 +18,8 @@ def answer_question():
     if not vraag:
         return jsonify({"error": "Geen vraag ontvangen."}), 400
 
-    antwoord = f"Hier is je antwoord op: '{vraag}'"
-    return jsonify({"vraag tweede vers": vraag, "antwoord tweede v": antwoord})
+    antwoord = f"Hier is je nieuwe antwoord op: '{vraag}'"
+    return jsonify({"vraag": vraag, "antwoord": antwoord})
 
 # OPTIONS-handler om preflight-verzoeken correct af te handelen
 @app.route("/kba", methods=["OPTIONS"])
