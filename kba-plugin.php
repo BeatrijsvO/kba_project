@@ -11,7 +11,7 @@ function kba_enqueue_scripts() {
     wp_enqueue_script(
         'kba-api-script', // Unieke naam
         plugins_url('js/kba-api.js', __FILE__), // Pad naar het bestand
-        array('jquery'), // Vereisten (optioneel)
+        // array('jquery'), // Vereisten (optioneel)
         null, // Versie (null = geen cache)
         true // Plaats in de footer
     );
@@ -28,8 +28,11 @@ function kba_shortcode_form() {
         <button type="submit">Verstuur</button>
     </form>
     <div id="kbaResult"></div>
+    <p>Bedankt dat je onze service nuu gebruikt!</p>
     <?php
     return ob_get_clean();
 }
 add_shortcode('kba_form', 'kba_shortcode_form');
+
+
 

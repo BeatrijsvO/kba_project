@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Verstuur de vraag naar de API
         try {
-            const response = await fetch("https://kba-project.onrender.com/kba", {
+			const response = await fetch("https://kba-project.onrender.com/kba", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
