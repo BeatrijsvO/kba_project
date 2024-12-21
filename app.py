@@ -1,20 +1,27 @@
 from flask import Flask
 from flask_cors import CORS
-from services.kba.endpoints import kba_blueprint  # Importeer de Blueprint
+from config import Config
+from routes.kba import kba_blueprint
+import os
+from waitress import serve
 
-# Flask-app configuratie
-app = Flask(__name__)
+def create_app():
+    """Initialiseer en configureer de Flask-applicatie."""
+    app = Flask(__name__)
 
-# CORS-configuratie: Sta verzoeken toe van specifieke origin (jouw frontend)
-CORS(app, resources={r"/api/kba/*": {"origins": ["https://yininit.nl"]}}, supports_credentials=True)
+    # Laad configuratie
+    app.config.from_object(Config)
 
-# Registreer de Blueprint
-app.register_blueprint(kba_blueprint, url_prefix="/api/kba")
+    # Configureer CORS
+    CORS(app, resources={r"/kba": {"origins": Config.CORS_ORIGINS}}, supports_credentials=True)
 
-# Start de server met Waitress
+    # Registreer Blueprints
+    app.register_blueprint(kba_blueprint)
+
+    return app
+
 if __name__ == "__main__":
-    from waitress import serve
-    import os
+    app = create_app()
+    port = int(os.getenv("PORT", Config.PORT))
     print("Running production server with Waitress...")
-    port = int(os.environ.get("PORT", 5000))  # Dynamische poort ophalen
-    serve(app, host="0.0.0.0", port=port)
+    serve(app, host=Config.HOST, port=port)

@@ -1,0 +1,18 @@
+# Plugin-directory negeren
+plugin/
+
+# Python cache bestanden
+__pycache__/
+*.pyc
+
+# Logbestanden
+*.log
+
+# Virtuele omgeving (indien gebruikt)
+venv/
+
+# Omgevingsvariabelen
+.env
+
+# Render-specifieke bestanden (optioneel)
+*.render
