@@ -41,7 +41,6 @@ class RetrievalEngine:
         index = faiss.IndexFlatL2(embedding_size)
         return FAISS(index, InMemoryDocstore({}), {})
 
-
     def add_documents(self, documents):
         """Voeg documenten toe aan de vectorstore."""
         document_texts = [doc.page_content for doc in documents]
