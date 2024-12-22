@@ -5,11 +5,7 @@ import logging
 from langchain.vectorstores import FAISS
 from langchain.docstore.in_memory import InMemoryDocstore
 from langchain.docstore.document import Document
-
-# from langchain.embeddings.base import Embeddings
-# from langchain.schema import Document
 from sentence_transformers import SentenceTransformer
-
 
 logging.basicConfig(level=logging.INFO)
 
@@ -25,7 +21,6 @@ class SentenceTransformerWrapper:
     def embed_query(self, query):
         """Genereer een embedding voor een enkele vraag."""
         return self.model.encode([query], show_progress_bar=False)[0]
-
 
 
 class RetrievalEngine:
@@ -54,14 +49,17 @@ class RetrievalEngine:
     def add_documents(self, documents):
         """Voeg documenten toe aan de vectorstore."""
         document_texts = [doc.page_content for doc in documents]
-        self.vectorstore.add_texts(document_texts, self.embeddings_model,metadatas=[doc.metadata for doc in documents])
+        self.vectorstore.add_texts(
+            document_texts, 
+            self.embeddings_model,
+            metadatas=[doc.metadata for doc in documents]
+        )
         self.vectorstore.save_local(self.vectorstore_path)
 
     def retrieve_documents(self, vraag, k=3):
-    """Haal de top k relevante documenten op uit de vectorstore."""
-    try:
-        return self.vectorstore.similarity_search(vraag, k=k)
-    except Exception as e:
-        logging.error(f"Fout bij ophalen van documenten: {e}")
-        return []
-
+        """Haal de top k relevante documenten op uit de vectorstore."""
+        try:
+            return self.vectorstore.similarity_search(vraag, k=k)
+        except Exception as e:
+            logging.error(f"Fout bij ophalen van documenten: {e}")
+            return []
