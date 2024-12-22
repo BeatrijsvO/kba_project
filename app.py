@@ -12,6 +12,11 @@ app.config.from_object(Config)
 CORS(app, resources={r"/kba": {"origins": Config.CORS_ORIGINS}}, supports_credentials=True)
 
 # Endpoint om vragen te beantwoorden
+
+@app.route("/")
+def home():
+    return "Webservice draait correct!"
+
 @app.route("/kba", methods=["POST"])
 def answer_question():
     if not request.is_json:
@@ -22,7 +27,8 @@ def answer_question():
     if not vraag:
         return jsonify({"error": "Geen vraag ontvangen."}), 400
 
-    antwoord = f"Hier is je antwoord op: '{vraag}'"
+    # Pas het antwoord aan
+    antwoord = f"Bedankt voor je vraag: '{vraag}'. Hier is een aangepast antwoord!"
     return jsonify({"vraag": vraag, "antwoord": antwoord})
 
 # OPTIONS-handler om preflight-verzoeken correct af te handelen
@@ -33,11 +39,3 @@ def handle_options():
     response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
     response.headers.add("Access-Control-Allow-Headers", "Content-Type")
     return response, 204
-
-# Start de server met Waitress
-if __name__ == "__main__":
-    from waitress import serve
-    import os
-    print("Running production server with Waitress...")
-    port = int(os.getenv("PORT", Config.PORT))
-    serve(app, host=Config.HOST, port=port)
