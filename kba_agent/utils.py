@@ -1,7 +1,6 @@
 from langchain.docstore.document import Document
 
 def load_documents(uploaded_files):
-    """Laad documenten uit geüploade bestanden."""
     documents = []
     for file_name, file_content in uploaded_files.items():
         content = file_content.decode('windows-1252')
