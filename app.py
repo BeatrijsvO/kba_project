@@ -30,12 +30,3 @@ def answer_question():
     # Pas het antwoord aan
     antwoord = f"Bedankt voor je vraag: '{vraag}'. Hier is een aangepast antwoord!"
     return jsonify({"vraag": vraag, "antwoord": antwoord})
-
-# OPTIONS-handler om preflight-verzoeken correct af te handelen
-@app.route("/kba", methods=["OPTIONS"])
-def handle_options():
-    response = jsonify()
-    response.headers.add("Access-Control-Allow-Origin", Config.CORS_ORIGINS[0])
-    response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
-    response.headers.add("Access-Control-Allow-Headers", "Content-Type")
-    return response, 204
