@@ -29,6 +29,7 @@ class RetrievalEngine:
         self.vectorstore = self._load_vectorstore()
 
     def _load_vectorstore(self):
+        """Initialiseer of laad een FAISS-vectorstore."""
         if os.path.exists(self.vectorstore_path) and os.path.exists(os.path.join(self.vectorstore_path, "index.faiss")):
             print("Laden van bestaande vectorstore...")
             return FAISS.load_local(self.vectorstore_path, self.embeddings_model, allow_dangerous_deserialization=True)
