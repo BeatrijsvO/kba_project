@@ -43,23 +43,4 @@ class RetrievalEngine:
             # Maak een nieuwe vectorstore
             logging.info("Nieuwe vectorstore aanmaken...")
             embedding_size = self.embeddings_model.model.get_sentence_embedding_dimension()
-            index = faiss.IndexFlatL2(embedding_size)
-            return FAISS(index, InMemoryDocstore({}), {})
-
-    def add_documents(self, documents):
-        """Voeg documenten toe aan de vectorstore."""
-        document_texts = [doc.page_content for doc in documents]
-        self.vectorstore.add_texts(
-            document_texts, 
-            self.embeddings_model,
-            metadatas=[doc.metadata for doc in documents]
-        )
-        self.vectorstore.save_local(self.vectorstore_path)
-
-    def retrieve_documents(self, vraag, k=3):
-        """Haal de top k relevante documenten op uit de vectorstore."""
-        try:
-            return self.vectorstore.similarity_search(vraag, k=k)
-        except Exception as e:
-            logging.error(f"Fout bij ophalen van documenten: {e}")
-            return []
+           
