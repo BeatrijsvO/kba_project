@@ -20,7 +20,7 @@ nlp_engine = NLPEngine()
 
 # Controleer of de vectorstore leeg is en voeg initiële documenten toe indien nodig
 if not os.path.exists(os.path.join(retrieval_engine.vectorstore_path, "index.faiss")):
-    print("Vectorstore is leeg. Voeg initiële documenten toe...")
+    print("Vectorstore is leeg. Voeg initiele documenten toe...")
     test_documents = [
         Document(page_content="Wat is AI?", metadata={"bron": "test.txt"}),
         Document(page_content="Machine learning is een subset van AI.", metadata={"bron": "test.txt"})
