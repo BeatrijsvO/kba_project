@@ -1,9 +1,9 @@
-import os
-import faiss
 from langchain_community.vectorstores import FAISS
 from langchain_community.docstore.in_memory import InMemoryDocstore
 from langchain.docstore.document import Document
 from sentence_transformers import SentenceTransformer
+import os
+import faiss
 
 class SentenceTransformerWrapper:
     def __init__(self, model_name="sentence-transformers/all-MiniLM-L6-v2"):
@@ -29,7 +29,6 @@ class RetrievalEngine:
         self.vectorstore = self._load_vectorstore()
 
     def _load_vectorstore(self):
-        """Initialiseer of laad een FAISS-vectorstore."""
         if os.path.exists(self.vectorstore_path) and os.path.exists(os.path.join(self.vectorstore_path, "index.faiss")):
             print("Laden van bestaande vectorstore...")
             return FAISS.load_local(self.vectorstore_path, self.embeddings_model, allow_dangerous_deserialization=True)
