@@ -1,11 +1,3 @@
-from langchain_community.vectorstores import FAISS
-from langchain_community.docstore.in_memory import InMemoryDocstore
-from langchain.docstore.document import Document
-from sentence_transformers import SentenceTransformer
-import os
-import faiss
-
-
 class SentenceTransformerWrapper:
     def __init__(self, model_name="sentence-transformers/all-MiniLM-L6-v2"):
         self.model = SentenceTransformer(model_name)
@@ -33,18 +25,25 @@ class RetrievalEngine:
         """Initialiseer of laad een FAISS-vectorstore."""
         if os.path.exists(self.vectorstore_path) and os.path.exists(os.path.join(self.vectorstore_path, "index.faiss")):
             print("Laden van bestaande vectorstore...")
-            return FAISS.load_local(self.vectorstore_path, self.embeddings_model, allow_dangerous_deserialization=True)
+            return FAISS.load_local(
+            self.vectorstore_path,
+            embedding_function=self.embeddings_model.embed_documents,
+            allow_dangerous_deserialization=True
+            )
         else:
             print("Nieuwe vectorstore aanmaken...")
             if not os.path.exists(self.vectorstore_path):
                 os.makedirs(self.vectorstore_path)
             embedding_size = self.embeddings_model.model.get_sentence_embedding_dimension()
             index = faiss.IndexFlatL2(embedding_size)
-            docstore = InMemoryDocstore({})  # Maak een lege documentopslag aan
-            index_to_docstore_id = {}  # Initialiseer een lege mapping
-            return FAISS(index=index, docstore=docstore, index_to_docstore_id=index_to_docstore_id)
-
-
+            docstore = InMemoryDocstore({})
+            index_to_docstore_id = {}
+            return FAISS(
+            index=index,
+            docstore=docstore,
+            index_to_docstore_id=index_to_docstore_id,
+            embedding_function=self.embeddings_model.embed_documents
+            )
 
     def add_documents(self, documents):
         """Voeg documenten toe aan de vectorstore."""
