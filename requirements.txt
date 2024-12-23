@@ -4,6 +4,7 @@ waitress
 sentence-transformers
 langchain
 transformers
-faiss-cpu
 torch
-langchain-community
+langchain_community>=0.2
+faiss-cpu>=1.7.4
+
