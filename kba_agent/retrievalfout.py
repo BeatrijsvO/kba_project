@@ -5,7 +5,6 @@ from sentence_transformers import SentenceTransformer
 import os
 import faiss
 
-
 class SentenceTransformerWrapper:
     def __init__(self, model_name="sentence-transformers/all-MiniLM-L6-v2"):
         self.model = SentenceTransformer(model_name)
@@ -30,24 +29,24 @@ class RetrievalEngine:
         self.vectorstore = self._load_vectorstore()
 
     def _load_vectorstore(self):
-        """Initialiseer of laad een FAISS-vectorstore."""
-        if os.path.exists(self.vectorstore_path) and os.path.exists(os.path.join(self.vectorstore_path, "index.faiss")):
-            print("Laden van bestaande vectorstore...")
-            return FAISS.load_local(self.vectorstore_path, self.embeddings_model, allow_dangerous_deserialization=True)
-        else:
-            print("Nieuwe vectorstore aanmaken...")
-            if not os.path.exists(self.vectorstore_path):
-                os.makedirs(self.vectorstore_path)
-            embedding_size = self.embeddings_model.model.get_sentence_embedding_dimension()
-            index = faiss.IndexFlatL2(embedding_size)
-            return FAISS(index, InMemoryDocstore({}), index_to_docstore_id={})
+    if os.path.exists(self.vectorstore_path) and os.path.exists(os.path.join(self.vectorstore_path, "index.faiss")):
+        print("Laden van bestaande vectorstore...")
+        return FAISS.load_local(self.vectorstore_path, self.embeddings_model, allow_dangerous_deserialization=True)
+    else:
+        print("Nieuwe vectorstore aanmaken...")
+        if not os.path.exists(self.vectorstore_path):
+            os.makedirs(self.vectorstore_path)
+        embedding_size = self.embeddings_model.model.get_sentence_embedding_dimension()
+        index = faiss.IndexFlatL2(embedding_size)
+        return FAISS(index, InMemoryDocstore({}), index_to_docstore_id={})
+
 
     def add_documents(self, documents):
         """Voeg documenten toe aan de vectorstore."""
         document_texts = [doc.page_content for doc in documents]
         self.vectorstore.add_texts(
-            document_texts, 
-            self.embeddings_model,
+            document_texts,
+            embeddings=self.embeddings_model,
             metadatas=[doc.metadata for doc in documents]
         )
         self.vectorstore.save_local(self.vectorstore_path)
