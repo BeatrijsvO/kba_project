@@ -52,3 +52,9 @@ def upload_documents():
     documents = load_documents(uploaded_files)
     retrieval_engine.add_documents(documents)
     return jsonify({"message": "Documenten succesvol toegevoegd!"})
+
+if __name__ == "__main__":
+    from waitress import serve
+    port = int(os.environ.get("PORT", 5000))  # Gebruik de poort uit de omgeving
+    print(f"Server draait op poort {port}")
+    serve(app, host="0.0.0.0", port=port)
