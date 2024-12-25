@@ -1,6 +1,6 @@
 # Importeer vereiste bibliotheken
 from fastapi import FastAPI, UploadFile, File, HTTPException, Header
-from langchain.vectorstores import FAISS
+from langchain_community.vectorstores import FAISS
 from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
 from sentence_transformers import SentenceTransformer
