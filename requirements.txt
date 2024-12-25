@@ -8,4 +8,7 @@ faiss-cpu
 torch
 langchain-community
 fastapi
-uvicorn[standard]
+uvicorn
+supabase-py
+python-multipart
+supabase
