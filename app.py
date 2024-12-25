@@ -24,7 +24,8 @@ app = FastAPI()
 # Initialiseer modellen
 class SentenceTransformerWrapper(Embeddings):
     def __init__(self, model_name="sentence-transformers/all-MiniLM-L6-v2"):
-        self.model = SentenceTransformer(model_name)
+        if not hasattr(self, 'model'):
+            self.model = SentenceTransformer(model_name)
 
     def embed_documents(self, texts):
         """Genereer embeddings voor een lijst met teksten."""
@@ -35,7 +36,11 @@ class SentenceTransformerWrapper(Embeddings):
         return self.model.encode([query], show_progress_bar=False)[0]
 
 # Initialiseer embeddings en BLOOMZ-pipeline
-embeddings_model = SentenceTransformerWrapper()
+@app.on_event("startup")
+async def load_models():
+    global embeddings_model
+    embeddings_model = SentenceTransformerWrapper()
+
 nlp_pipeline = pipeline("text-generation", model="bigscience/bloomz-1b7")
 
 # Functie: FAISS-vectorstore opbouwen vanuit Supabase
