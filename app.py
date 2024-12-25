@@ -120,7 +120,7 @@ async def upload_file(files: list[UploadFile] = File(...), token: str = Header(.
                 )
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Fout bij uploaden: {str(e)}")
-    return {"status": "success", "message": f"{len(files)} bestand(en) succesvol geupload."}
+    return {"status": "success", "message": f"{len(files)} bestanden succesvol geupload."}
 
 @app.delete("/documents/")
 async def delete_document(filename: str, token: str = Header(...)):
