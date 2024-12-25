@@ -7,6 +7,7 @@ from sentence_transformers import SentenceTransformer
 from transformers import pipeline
 from supabase import create_client, Client
 import logging
+from memory_profiler import profile
 
 # Logging configureren
 logging.basicConfig(level=logging.INFO)
@@ -38,6 +39,7 @@ embeddings_model = SentenceTransformerWrapper()
 nlp_pipeline = pipeline("text-generation", model="bigscience/bloomz-1b7")
 
 # Functie: FAISS-vectorstore opbouwen vanuit Supabase
+@profile
 def build_vectorstore_from_supabase():
     try:
         response = supabase.storage().from_('documents').list()
@@ -71,6 +73,7 @@ def retrieve_documents(vraag, k=3):
     return [doc.page_content for doc in results]
 
 # Functie: Antwoord genereren
+@profile
 def generate_answer(vraag, context):
     try:
         prompt = (
