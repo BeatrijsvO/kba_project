@@ -23,7 +23,7 @@ app = FastAPI()
 
 # Initialiseer modellen
 class SentenceTransformerWrapper(Embeddings):
-    def __init__(self, model_name="sentence-transformers/all-MiniLM-L6-v2"):
+    def __init__(self, model_name="sentence-transformers/paraphrase-MiniLM-L3-v2"):
         if not hasattr(self, 'model'):
             self.model = SentenceTransformer(model_name)
 
