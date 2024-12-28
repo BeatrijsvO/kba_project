@@ -45,27 +45,40 @@ nlp_pipeline = pipeline("text-generation", model="bigscience/bloomz-1b7")
 
 # Functie: FAISS-vectorstore opbouwen vanuit Supabase
 @profile
+# Functie: FAISS-vectorstore opbouwen vanuit Supabase
 def build_vectorstore_from_supabase():
     try:
-        response = supabase.storage().from_('documents').list()
+        # Ophalen van bestanden vanuit Supabase Storage
+        response = supabase.storage.from_("documents").list()
+        print("Supabase API-respons:", response)
+
         if not response:
-            logger.warning("Geen documenten gevonden in Supabase.")
-            return FAISS.from_texts([], embeddings_model)
-        documents = []
+            raise ValueError("Geen bestanden gevonden in de 'documents' bucket.")
+
+        # Verwerken van bestanden naar tekst
+        document_texts = []
         for file in response:
-            file_content = supabase.storage().from_('documents').download(f"documents/{file['name']}")
-            content = file_content.decode('windows-1252')  # Decodeer inhoud
-            texts = content.split('\n')
-            file_documents = [
-                Document(page_content=text.strip(), metadata={"source": file["name"]})
-                for text in texts if text.strip()
-            ]
-            documents.extend(file_documents)
-        document_texts = [doc.page_content for doc in documents]
+            file_name = file["name"]
+            print(f"Bestand gevonden: {file_name}")
+            try:
+                file_content = supabase.storage.from_("documents").download(file_name).decode("utf-8")
+                document_texts.append(file_content)
+            except Exception as e:
+                logger.error(f"Fout bij lezen van bestand {file_name}: {str(e)}")
+
+        # Controleer of document_texts niet leeg is
+        if not document_texts:
+            raise ValueError("Geen tekstinhoud gevonden in de bestanden.")
+
+        # Initialiseren van een embeddingsmodel
+        embeddings_model = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+
+        # Aanmaken van de FAISS-vectorstore
         return FAISS.from_texts(document_texts, embeddings_model)
+
     except Exception as e:
         logger.error(f"Fout bij opbouwen van vectorstore: {str(e)}")
-        raise HTTPException(status_code=500, detail="Fout bij opbouwen van vectorstore.")
+        raise ValueError(f"Fout bij opbouwen van vectorstore: {str(e)}")
 
 # Initialiseer FAISS-vectorstore
 vectorstore = build_vectorstore_from_supabase()
