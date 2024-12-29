@@ -1,183 +1,32 @@
-# Importeer vereiste bibliotheken
-from fastapi import FastAPI, UploadFile, File, HTTPException, Header
-from langchain_community.vectorstores import FAISS
-from langchain.embeddings.base import Embeddings
-from langchain.docstore.document import Document
-from sentence_transformers import SentenceTransformer
-from transformers import pipeline
-from supabase import create_client, Client
-import logging
-from memory_profiler import profile
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+from config import Config
 
-# Logging configureren
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Flask-app configuratie
+app = Flask(__name__)
 
-# Configuratie voor Supabase
-SUPABASE_URL = "https://jrakvtaklrigozchagcr.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpyYWt2dGFrbHJpZ296Y2hhZ2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzUwNzQ4ODIsImV4cCI6MjA1MDY1MDg4Mn0.gWw2dGI8J-kzbd7SUuFfDFoviNLB39GrTdUpToKonek"
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# Laad configuratie vanuit config.py
+app.config.from_object(Config)
 
-# Initialiseer FastAPI
-app = FastAPI()
+# CORS-configuratie
+CORS(app, resources={r"/kba": {"origins": Config.CORS_ORIGINS}}, supports_credentials=True)
 
-# Initialiseer modellen
-class SentenceTransformerWrapper(Embeddings):
-    def __init__(self, model_name="sentence-transformers/paraphrase-MiniLM-L3-v2"):
-        if not hasattr(self, 'model'):
-            self.model = SentenceTransformer(model_name)
+# Endpoint om vragen te beantwoorden
 
-    def embed_documents(self, texts):
-        """Genereer embeddings voor een lijst met teksten."""
-        return self.model.encode(texts, show_progress_bar=True)
+@app.route("/")
+def home():
+    return "Webservice draait correct!"
 
-    def embed_query(self, query):
-        """Genereer een embedding voor een enkele vraag."""
-        return self.model.encode([query], show_progress_bar=False)[0]
+@app.route("/kba", methods=["POST"])
+def answer_question():
+    if not request.is_json:
+        return jsonify({"error": "Verwacht JSON-data"}), 400
 
-# Initialiseer embeddings en BLOOMZ-pipeline
-@app.on_event("startup")
-async def load_models():
-    global embeddings_model
-    embeddings_model = SentenceTransformerWrapper()
+    data = request.get_json()
+    vraag = data.get("vraag", "")
+    if not vraag:
+        return jsonify({"error": "Geen vraag ontvangen."}), 400
 
-nlp_pipeline = pipeline("text-generation", model="bigscience/bloomz-1b7")
-
-# Functie: FAISS-vectorstore opbouwen vanuit Supabase
-@profile
-# Functie: FAISS-vectorstore opbouwen vanuit Supabase
-def build_vectorstore_from_supabase():
-    try:
-        # Ophalen van bestanden vanuit Supabase Storage
-        response = supabase.storage.from_("documents").list()
-        print("Supabase API-respons:", response)
-
-        if not response:
-            raise ValueError("Geen bestanden gevonden in de 'documents' bucket.")
-
-        # Verwerken van bestanden naar tekst
-        document_texts = []
-        for file in response:
-            file_name = file["name"]
-            print(f"Bestand gevonden: {file_name}")
-            try:
-                file_content = supabase.storage.from_("documents").download(file_name).decode("utf-8")
-                document_texts.append(file_content)
-            except Exception as e:
-                logger.error(f"Fout bij lezen van bestand {file_name}: {str(e)}")
-
-        # Controleer of document_texts niet leeg is
-        if not document_texts:
-            raise ValueError("Geen tekstinhoud gevonden in de bestanden.")
-
-        # Initialiseren van een embeddingsmodel
-        embeddings_model = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
-
-        # Aanmaken van de FAISS-vectorstore
-        return FAISS.from_texts(document_texts, embeddings_model)
-
-    except Exception as e:
-        logger.error(f"Fout bij opbouwen van vectorstore: {str(e)}")
-        raise ValueError(f"Fout bij opbouwen van vectorstore: {str(e)}")
-
-# Initialiseer FAISS-vectorstore
-vectorstore = build_vectorstore_from_supabase()
-
-# Functie: Relevante documenten ophalen
-def retrieve_documents(vraag, k=3):
-    if vectorstore is None:
-        raise NameError("Vectorstore is niet gedefinieerd. Zorg ervoor dat je FAISS-vectorstore hebt aangemaakt.")
-    results = vectorstore.similarity_search(vraag, k=k)
-    return [doc.page_content for doc in results]
-
-# Functie: Antwoord genereren
-@profile
-def generate_answer(vraag, context):
-    try:
-        prompt = (
-            f"Gebruik de volgende context om een nauwkeurig antwoord te formuleren:\n\n"
-            f"Context:\n{context}\n\n"
-            f"Vraag: {vraag}\n\n"
-            f"Antwoord:"
-        )
-        max_length = min(500, len(context.split()) + 100)
-        result = nlp_pipeline(prompt, max_length=max_length, truncation=True, num_return_sequences=1)
-        if result and "generated_text" in result[0]:
-            return result[0]['generated_text']
-        else:
-            return "Het model kon geen antwoord genereren."
-    except Exception as e:
-        logger.error(f"Fout bij antwoordgeneratie: {str(e)}")
-        return "Er trad een fout op bij het genereren van het antwoord."
-
-# Functie: Hoofdfunctie voor vraag en antwoord
-def kba_antwoord(vraag):
-    try:
-        relevante_documenten = retrieve_documents(vraag)
-        if not relevante_documenten:
-            return "Geen relevante documenten gevonden om deze vraag te beantwoorden."
-        context = "\n".join(relevante_documenten)
-        antwoord = generate_answer(vraag, context)
-        logger.info(f"Gegenereerd antwoord: {antwoord}")
-        return antwoord
-    except Exception as e:
-        logger.error(f"Fout in kba_antwoord: {str(e)}")
-        return "Er trad een fout op bij het verwerken van de vraag."
-
-# FastAPI Endpoints
-@app.post("/upload/")
-async def upload_file(files: list[UploadFile] = File(...), token: str = Header(...)):
-    if token != "jouw-geheime-token":
-        raise HTTPException(status_code=403, detail="Ongeldig API-token")
-    for file in files:
-        try:
-            response = supabase.storage().from_('documents').upload(
-                f"documents/{file.filename}", file.file
-            )
-            if "error" in response:
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Fout bij uploaden van {file.filename}: {response['error']['message']}"
-                )
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Fout bij uploaden: {str(e)}")
-    return {"status": "success", "message": f"{len(files)} bestanden succesvol geupload."}
-
-@app.delete("/documents/")
-async def delete_document(filename: str, token: str = Header(...)):
-    if token != "jouw-geheime-token":
-        raise HTTPException(status_code=403, detail="Ongeldig API-token")
-    try:
-        existing_files = supabase.storage().from_('documents').list()
-        if filename not in [file['name'] for file in existing_files]:
-            raise HTTPException(status_code=404, detail=f"Bestand '{filename}' niet gevonden.")
-        response = supabase.storage().from_('documents').remove([f"documents/{filename}"])
-        if "error" in response:
-            raise HTTPException(status_code=500, detail=f"Fout bij verwijderen: {response['error']['message']}")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Fout bij verwijderen: {str(e)}")
-    return {"status": "success", "message": f"Document '{filename}' succesvol verwijderd."}
-
-@app.get("/documents/")
-async def list_documents():
-    try:
-        response = supabase.storage().from_('documents').list()
-        if not response:
-            return {"status": "success", "documents": [], "message": "Geen documenten gevonden."}
-        documents = [
-            {
-                "name": file["name"],
-                "size": file.get("size", "Onbekend"),
-                "created_at": file.get("created_at", "Onbekend"),
-            }
-            for file in response
-        ]
-        return {"status": "success", "documents": documents}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Fout bij ophalen documenten: {str(e)}")
-
-# Debug: Testvraag
-if __name__ == "__main__":
-    vraag = "Wat moet ik doen met bedrijfsapparatuur?"
-    antwoord = kba_antwoord(vraag)
-    print(f"EINDE DEBUG antwoord:\n{antwoord}")
+    # Pas het antwoord aan
+    antwoord = f"Bedankt voor je vraag: '{vraag}'. Hier is een aangepast antwoord!"
+    return jsonify({"vraag": vraag, "antwoord": antwoord})
