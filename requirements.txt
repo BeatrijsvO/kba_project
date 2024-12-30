@@ -2,6 +2,7 @@ flask
 flask-cors
 sentence-transformers
 langchain
+langchain_community
 faiss-cpu
 transformers
 gunicorn
