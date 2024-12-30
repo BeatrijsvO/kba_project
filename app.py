@@ -70,7 +70,7 @@ def upload_documents():
     # Sla FAISS op naar bestand
     vectorstore.save_local(str(FAISS_DIR))
 
-    return jsonify({"message": f"{len(document_texts)} documenten succesvol geüpload en verwerkt."})
+    return jsonify({"message": f"{len(document_texts)} documenten succesvol geupload en verwerkt."})
 
 @app.route("/kba", methods=["POST"])
 def answer_question():
