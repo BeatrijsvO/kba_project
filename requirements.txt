@@ -6,4 +6,3 @@ langchain_community
 faiss-cpu
 transformers
 gunicorn
-uvicorn[standard]
