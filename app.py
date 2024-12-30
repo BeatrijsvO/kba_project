@@ -7,6 +7,7 @@ from langchain.embeddings.base import Embeddings
 from langchain.docstore.document import Document
 from transformers import pipeline
 import os
+from pathlib import Path
 import json
 
 # Flask-app configuratie
@@ -14,7 +15,12 @@ app = Flask(__name__)
 app.config.from_object(Config)
 CORS(app, resources={r"/kba": {"origins": Config.CORS_ORIGINS}}, supports_credentials=True)
 
-# Embeddings en FAISS initialisatie
+# FAISS opslaglocatie
+FAISS_DIR = Path("/persistent/faiss_store")
+
+# FAISS initialisatie
+vectorstore = None  # Globale variabele om de vectorstore op te slaan
+
 class SentenceTransformerWrapper(Embeddings):
     def __init__(self, model_name="sentence-transformers/all-MiniLM-L6-v2"):
         self.model = SentenceTransformer(model_name)
@@ -27,7 +33,10 @@ class SentenceTransformerWrapper(Embeddings):
 
 embeddings_model = SentenceTransformerWrapper()
 nlp_pipeline = pipeline("text-generation", model="bigscience/bloomz-1b7")
-vectorstore = None
+
+# Controleer of FAISS-bestand bestaat
+if FAISS_DIR.exists():
+    vectorstore = FAISS.load_local(str(FAISS_DIR), embeddings_model)
 
 @app.route("/upload", methods=["POST"])
 def upload_documents():
@@ -45,7 +54,15 @@ def upload_documents():
         documents.extend(file_documents)
 
     document_texts = [doc.page_content for doc in documents]
-    vectorstore = FAISS.from_texts(document_texts, embeddings_model)
+
+    # Update of maak nieuwe FAISS vectorstore
+    if vectorstore is None:
+        vectorstore = FAISS.from_texts(document_texts, embeddings_model)
+    else:
+        vectorstore.add_texts(document_texts)
+
+    # Sla FAISS op naar bestand
+    vectorstore.save_local(str(FAISS_DIR))
 
     return jsonify({"message": f"{len(documents)} documenten succesvol geüpload en verwerkt"})
 
