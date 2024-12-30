@@ -3,16 +3,16 @@ plugin/
 
 # Python cache bestanden
 __pycache__/
-*.pyc
+#*.pyc
 
 # Logbestanden
 *.log
 
 # Virtuele omgeving (indien gebruikt)
-venv/
+#venv/
 
 # Omgevingsvariabelen
-.env
+#.env
 
 # Render-specifieke bestanden (optioneel)
-*.render
+#*.render
