@@ -1,9 +1,7 @@
 flask
 flask-cors
-waitress
 sentence-transformers
 langchain
-transformers
 faiss-cpu
-torch
-langchain-community
+transformers
+gunicorn

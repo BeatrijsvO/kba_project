@@ -1,1 +1,1 @@
-web: python -m waitress --host=0.0.0.0 --port=$PORT app:app
+web: gunicorn app:app -w 1 -k sync --threads 2 --timeout 120
