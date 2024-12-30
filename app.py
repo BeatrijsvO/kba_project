@@ -22,7 +22,7 @@ FAISS_DIR = Path("/persistent/faiss_store")
 vectorstore = None  # Globale variabele om de vectorstore op te slaan
 
 class SentenceTransformerWrapper(Embeddings):
-    def __init__(self, model_name="sentence-transformers/all-MiniLM-L6-v2"):
+    def __init__(self, model_name="sentence-transformers/paraphrase-MiniLM-L3-v2"):
         self.model = SentenceTransformer(model_name)
 
     def embed_documents(self, texts):
@@ -32,7 +32,7 @@ class SentenceTransformerWrapper(Embeddings):
         return self.model.encode([query], show_progress_bar=False)[0]
 
 embeddings_model = SentenceTransformerWrapper()
-nlp_pipeline = pipeline("text-generation", model="bigscience/bloomz-1b7")
+nlp_pipeline = pipeline("text-generation", model="distilgpt2")
 
 # Controleer of FAISS-bestand bestaat
 if FAISS_DIR.exists():
