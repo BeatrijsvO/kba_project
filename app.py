@@ -1,32 +1,92 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from config import Config
+from sentence_transformers import SentenceTransformer
+from langchain.vectorstores import FAISS
+from langchain.embeddings.base import Embeddings
+from langchain.docstore.document import Document
+from transformers import pipeline
+import os
+import json
 
 # Flask-app configuratie
 app = Flask(__name__)
-
-# Laad configuratie vanuit config.py
 app.config.from_object(Config)
-
-# CORS-configuratie
 CORS(app, resources={r"/kba": {"origins": Config.CORS_ORIGINS}}, supports_credentials=True)
 
-# Endpoint om vragen te beantwoorden
+# Embeddings en FAISS initialisatie
+class SentenceTransformerWrapper(Embeddings):
+    def __init__(self, model_name="sentence-transformers/all-MiniLM-L6-v2"):
+        self.model = SentenceTransformer(model_name)
 
-@app.route("/")
-def home():
-    return "Webservice draait correct!"
+    def embed_documents(self, texts):
+        return self.model.encode(texts, show_progress_bar=True)
+
+    def embed_query(self, query):
+        return self.model.encode([query], show_progress_bar=False)[0]
+
+embeddings_model = SentenceTransformerWrapper()
+nlp_pipeline = pipeline("text-generation", model="bigscience/bloomz-1b7")
+vectorstore = None
+
+@app.route("/upload", methods=["POST"])
+def upload_documents():
+    global vectorstore
+    if 'files' not in request.files:
+        return jsonify({"error": "Geen bestanden ontvangen"}), 400
+
+    files = request.files.getlist("files")
+    documents = []
+
+    for file in files:
+        content = file.read().decode('utf-8')
+        texts = content.split('\n')
+        file_documents = [Document(page_content=text.strip(), metadata={"source": file.filename}) for text in texts if text.strip()]
+        documents.extend(file_documents)
+
+    document_texts = [doc.page_content for doc in documents]
+    vectorstore = FAISS.from_texts(document_texts, embeddings_model)
+
+    return jsonify({"message": f"{len(documents)} documenten succesvol geüpload en verwerkt"})
 
 @app.route("/kba", methods=["POST"])
 def answer_question():
+    global vectorstore
+
     if not request.is_json:
         return jsonify({"error": "Verwacht JSON-data"}), 400
 
     data = request.get_json()
     vraag = data.get("vraag", "")
+
     if not vraag:
         return jsonify({"error": "Geen vraag ontvangen."}), 400
 
-    # Pas het antwoord aan
-    antwoord = f"Bedankt voor je vraag: '{vraag}'. Hier is een aangepast antwoord!"
-    return jsonify({"vraag": vraag, "antwoord": antwoord})
+    if vectorstore is None:
+        return jsonify({"error": "Geen documenten beschikbaar. Upload eerst documenten."}), 400
+
+    try:
+        relevante_documenten = vectorstore.similarity_search(vraag, k=3)
+        context = "\n".join([doc.page_content for doc in relevante_documenten])
+
+        prompt = (
+            f"Gebruik de onderstaande informatie om de vraag te beantwoorden:\n"
+            f"{context}\n\n"
+            f"Vraag: {vraag}\n"
+            f"Antwoord (geef alleen het relevante deel van de context):"
+        )
+
+        result = nlp_pipeline(prompt, max_length=200, truncation=True, num_return_sequences=1)
+        antwoord = result[0]['generated_text']
+
+        return jsonify({"vraag": vraag, "antwoord": antwoord})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/", methods=["GET"])
+def home():
+    return "Webservice draait correct!"
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=os.getenv("PORT", 5000))
